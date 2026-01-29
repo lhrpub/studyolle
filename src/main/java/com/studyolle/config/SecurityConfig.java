@@ -19,7 +19,9 @@ public class SecurityConfig {
                         "/check-email-token", "/email-login", "check-email-login",
                         "/login-link" ).permitAll()
                         .requestMatchers(HttpMethod.GET, "/profile/*").permitAll()
+                        .requestMatchers("/node_modules/**").permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
+
                         .anyRequest().authenticated()
         );
 
