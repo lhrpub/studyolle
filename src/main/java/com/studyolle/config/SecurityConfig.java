@@ -25,6 +25,9 @@ public class SecurityConfig {
                         .anyRequest().authenticated()
         );
 
+        http.formLogin(form -> form.loginPage("/login").permitAll());
+        http.logout(logout -> logout.logoutSuccessUrl("/"));
+
         return http.build();
     }
 }
