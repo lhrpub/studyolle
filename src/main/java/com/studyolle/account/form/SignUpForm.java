@@ -1,4 +1,4 @@
-package com.studyolle.account;
+package com.studyolle.account.form;
 
 import jakarta.validation.constraints.Email;
 import jakarta.validation.constraints.NotBlank;
