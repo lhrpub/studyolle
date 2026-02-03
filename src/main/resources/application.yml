@@ -1,3 +1,20 @@
 spring:
   profiles:
     active: local
+
+  jpa:
+    hibernate:
+      ddl-auto: create-drop  # 개발용 (운영에서는 validate 권장)
+    properties:
+      hibernate:
+        format_sql: true     # SQL 보기 좋게 포맷
+
+logging:
+  level:
+    org:
+      hibernate:
+        SQL: DEBUG           # 실행 SQL 로그
+        type:
+          descriptor:
+            sql:
+              BasicBinder: TRACE  # 바인딩 파라미터 로그
