@@ -3,6 +3,10 @@ package com.studyolle.settings;
 import com.studyolle.account.AccountService;
 import com.studyolle.account.CurrentUser;
 import com.studyolle.domain.Account;
+import com.studyolle.settings.form.Notifications;
+import com.studyolle.settings.form.PasswordForm;
+import com.studyolle.settings.form.Profile;
+import com.studyolle.settings.validator.PasswordFormValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -25,13 +29,13 @@ public class SettingsController {
     }
 
     private static final String SETTINGS_PROFILE_VIEW_NAME = "settings/profile";
-    private static final String SETTINGS_PROFILE_URL = "/settings/profile";
+    private static final String SETTINGS_PROFILE_URL = "/" + SETTINGS_PROFILE_VIEW_NAME;
 
     private static final String SETTINGS_PASSWORD_VIEW_NAME = "settings/password";
-    private static final String SETTINGS_PASSWORD_URL = "/settings/password";
+    private static final String SETTINGS_PASSWORD_URL = "/" + SETTINGS_PASSWORD_VIEW_NAME;
 
     private static final String SETTINGS_NOTIFICATIONS_VIEW_NAME = "settings/notifications";
-    private static final String SETTINGS_NOTIFICATIONS_URL = "/settings/notifications";
+    private static final String SETTINGS_NOTIFICATIONS_URL = "/" + SETTINGS_NOTIFICATIONS_VIEW_NAME;
 
     private final AccountService accountService;
     private final ModelMapper modelMapper;
