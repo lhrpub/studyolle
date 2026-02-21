@@ -1,7 +1,6 @@
 package com.studyolle.study.event;
 
 import com.studyolle.account.AccountRepository;
-import com.studyolle.account.notification.NotificationRepository;
 import com.studyolle.config.AppProperties;
 import com.studyolle.domain.Account;
 import com.studyolle.domain.Notification;
@@ -9,6 +8,7 @@ import com.studyolle.domain.NotificationType;
 import com.studyolle.domain.Study;
 import com.studyolle.mail.EmailMessage;
 import com.studyolle.mail.EmailService;
+import com.studyolle.notification.NotificationRepository;
 import com.studyolle.study.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
