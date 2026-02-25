@@ -1,6 +1,7 @@
 package com.studyolle.account;
 
 import com.studyolle.domain.Account;
+import org.springframework.data.jpa.repository.EntityGraph;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -13,4 +14,7 @@ public interface AccountRepository extends JpaRepository<Account, Long> , Accoun
     Account findByEmail(String email);
 
     Account findByNickname(String nickname);
+
+    @EntityGraph(attributePaths = {"tags", "zones"})
+    Account findAccountWithTagsAndZonesById(Long id);
 }
