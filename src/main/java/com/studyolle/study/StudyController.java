@@ -1,9 +1,11 @@
 package com.studyolle.study;
 
-import com.studyolle.account.CurrentAccount;
-import com.studyolle.domain.Account;
-import com.studyolle.domain.Study;
+import com.studyolle.global.annotaiton.CurrentAccount;
+import com.studyolle.account.entity.Account;
+import com.studyolle.study.entity.Study;
 import com.studyolle.study.form.StudyForm;
+import com.studyolle.study.repository.StudyRepository;
+import com.studyolle.study.service.StudyService;
 import com.studyolle.study.validator.StudyFormValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;

@@ -1,6 +1,6 @@
 package com.studyolle.study.validator;
 
-import com.studyolle.study.StudyRepository;
+import com.studyolle.study.repository.StudyRepository;
 import com.studyolle.study.form.StudyForm;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Component;

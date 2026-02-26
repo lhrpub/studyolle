@@ -1,11 +1,11 @@
 package com.studyolle.main;
 
-import com.studyolle.account.AccountRepository;
-import com.studyolle.account.CurrentAccount;
-import com.studyolle.domain.Account;
-import com.studyolle.domain.Study;
-import com.studyolle.event.EnrollmentRepository;
-import com.studyolle.study.StudyRepository;
+import com.studyolle.account.repository.AccountRepository;
+import com.studyolle.global.annotaiton.CurrentAccount;
+import com.studyolle.account.entity.Account;
+import com.studyolle.study.entity.Study;
+import com.studyolle.enrollment.repository.EnrollmentRepository;
+import com.studyolle.study.repository.StudyRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -14,8 +14,6 @@ import org.springframework.data.web.PageableDefault;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-
-import java.util.List;
 
 @Controller
 @RequiredArgsConstructor

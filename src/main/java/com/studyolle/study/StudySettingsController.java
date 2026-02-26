@@ -2,17 +2,19 @@ package com.studyolle.study;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.studyolle.account.CurrentAccount;
-import com.studyolle.domain.Account;
-import com.studyolle.domain.Study;
-import com.studyolle.domain.Tag;
-import com.studyolle.domain.Zone;
-import com.studyolle.tag.TagForm;
-import com.studyolle.tag.TagService;
-import com.studyolle.zone.ZoneForm;
+import com.studyolle.global.annotaiton.CurrentAccount;
+import com.studyolle.account.entity.Account;
+import com.studyolle.study.entity.Study;
+import com.studyolle.tag.entity.Tag;
+import com.studyolle.zone.entity.Zone;
+import com.studyolle.study.repository.StudyRepository;
+import com.studyolle.study.service.StudyService;
+import com.studyolle.tag.form.TagForm;
+import com.studyolle.tag.service.TagService;
+import com.studyolle.zone.form.ZoneForm;
 import com.studyolle.study.form.StudyDescriptionForm;
-import com.studyolle.tag.TagRepository;
-import com.studyolle.zone.ZoneRepository;
+import com.studyolle.tag.repository.TagRepository;
+import com.studyolle.zone.repository.ZoneRepository;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -23,8 +25,6 @@ import org.springframework.validation.Errors;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.net.URLEncoder;
-import java.nio.charset.StandardCharsets;
 import java.util.List;
 import java.util.stream.Collectors;
 
