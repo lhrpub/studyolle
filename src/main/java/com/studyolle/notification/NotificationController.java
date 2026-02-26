@@ -1,9 +1,11 @@
 package com.studyolle.notification;
 
 
-import com.studyolle.account.CurrentAccount;
-import com.studyolle.domain.Account;
-import com.studyolle.domain.Notification;
+import com.studyolle.global.annotaiton.CurrentAccount;
+import com.studyolle.account.entity.Account;
+import com.studyolle.notification.entity.Notification;
+import com.studyolle.notification.repository.NotificationRepository;
+import com.studyolle.notification.service.NotificationService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

@@ -1,6 +1,6 @@
 package com.studyolle.event.form;
 
-import com.studyolle.domain.EventType;
+import com.studyolle.event.entity.EventType;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotBlank;
 import lombok.Data;
