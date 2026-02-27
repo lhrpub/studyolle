@@ -1,17 +1,11 @@
-package com.studyolle.global.jwt;
+package com.studyolle.global.token;
 
 
-import com.studyolle.account.security.UserAccount;
-import com.studyolle.account.service.AccountService;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.JwtException;
 import io.jsonwebtoken.Jwts;
-import io.jsonwebtoken.SignatureAlgorithm;
 import io.jsonwebtoken.security.Keys;
 import lombok.RequiredArgsConstructor;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.stereotype.Component;
 
 import javax.crypto.SecretKey;
@@ -26,10 +20,8 @@ public class JwtTokenProvider {
     private final String secretKey = "secretsecretsecretsecretsecretsecret"; // 실제 운영에서는 환경변수
     private final long accessTokenValidMillisecond = 1000L * 60 * 30; // 30분
 
-    private final AccountService accountService;
-
-    public String createAccessToken(String username, List<String> roles) {
-        Claims claims = Jwts.claims().setSubject(username);
+    public String createAccessToken(String email, List<String> roles) {
+        Claims claims = Jwts.claims().setSubject(email);
         claims.put("roles", roles);
         Date now = new Date();
         return Jwts.builder()
@@ -52,16 +44,16 @@ public class JwtTokenProvider {
         }
     }
 
-    public Authentication getAuthentication(String token) {
-        String username = Jwts.parserBuilder()
+    public String getUserEmail(String token) {
+        return Jwts.parserBuilder()
                 .setSigningKey(getSigningKey())
                 .build()
-                .parseClaimsJws(token).getBody().getSubject();
-        UserDetails userDetails = new UserAccount(accountService.loadAccountByUsername(username));
-        return new UsernamePasswordAuthenticationToken(userDetails, null, userDetails.getAuthorities());
+                .parseClaimsJws(token)
+                .getBody()
+                .getSubject();
     }
 
-    private SecretKey getSigningKey() {
+    public SecretKey getSigningKey() {
         return Keys.hmacShaKeyFor(secretKey.getBytes(StandardCharsets.UTF_8));
     }
 }

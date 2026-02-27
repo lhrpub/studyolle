@@ -15,6 +15,8 @@ import com.studyolle.tag.repository.TagRepository;
 import com.studyolle.tag.service.TagService;
 import com.studyolle.zone.form.ZoneForm;
 import com.studyolle.zone.repository.ZoneRepository;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
@@ -130,12 +132,20 @@ public class SettingsController {
 
     @PostMapping(ACCOUNT)
     public String updateAccount(@CurrentAccount Account account, @Valid NicknameForm nicknameForm, Errors errors,
-                                Model model, RedirectAttributes attributes) {
+                                Model model, RedirectAttributes attributes , HttpServletResponse response) {
         if (errors.hasErrors()) {
             model.addAttribute(account);
             return SETTINGS + ACCOUNT;        }
 
-        accountService.updateNickname(account, nicknameForm.getNickname());
+        String jwtToken = accountService.updateNickname(account, nicknameForm.getNickname());
+
+        Cookie cookie = new Cookie("ACCESS_TOKEN", jwtToken);
+        cookie.setHttpOnly(true);  // JS에서 못읽게
+        cookie.setSecure(false);    // HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(30 * 60); // 30분
+        response.addCookie(cookie);
+
         attributes.addFlashAttribute("message", "닉네임을 수정했습니다.");
         return "redirect:/" + SETTINGS + ACCOUNT;    }
 

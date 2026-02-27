@@ -1,7 +1,7 @@
 package com.studyolle.global.config;
 
 import com.studyolle.account.service.AccountService;
-import com.studyolle.global.jwt.JwtAuthenticationFilter;
+import com.studyolle.global.token.JwtAuthenticationFilter;
 import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.security.servlet.PathRequest;
 import org.springframework.context.annotation.Bean;
@@ -22,9 +22,6 @@ import javax.sql.DataSource;
 @RequiredArgsConstructor
 public class SecurityConfig {
 
-    private final AccountService accountService;
-    private final DataSource dataSource;
-
     private final JwtAuthenticationFilter jwtAuthenticationFilter;
 
     @Bean
@@ -38,28 +35,16 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.GET, "/profile/*").permitAll()
                         .requestMatchers("/node_modules/**").permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
-//                        .requestMatchers(HttpMethod.POST, "/login").permitAll()
 
                         .anyRequest().authenticated()
         );
 
-//        http.formLogin(form -> form.loginPage("/login").permitAll());
-//        http.logout(logout -> logout.logoutSuccessUrl("/"));
-//
-//        http.rememberMe(remember -> remember
-//                .userDetailsService(accountService)
-//                .tokenRepository(tokenRepository()));
+        http.logout(logout -> logout.disable());
+
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
 
 
 
         return http.build();
-    }
-
-    @Bean
-    public PersistentTokenRepository tokenRepository() {
-        JdbcTokenRepositoryImpl jdbcTokenRepository = new JdbcTokenRepositoryImpl();
-        jdbcTokenRepository.setDataSource(dataSource);
-        return jdbcTokenRepository;
     }
 }
