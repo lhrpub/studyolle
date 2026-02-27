@@ -1,22 +1,27 @@
 package com.studyolle.account;
 
+import com.studyolle.account.form.LoginRequestForm;
 import com.studyolle.account.form.SignUpForm;
 import com.studyolle.account.repository.AccountRepository;
 import com.studyolle.account.service.AccountService;
 import com.studyolle.account.validator.SignUpFormValidator;
 import com.studyolle.account.entity.Account;
 import com.studyolle.global.annotaiton.CurrentAccount;
+import com.studyolle.global.token.JwtTokenProvider;
+import com.studyolle.global.token.RefreshTokenService;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,10 +30,73 @@ public class AccountController {
     private final SignUpFormValidator signUpFormValidator;
     private final AccountService accountService;
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
+    private final RefreshTokenService refreshTokenService;
 
     @InitBinder("signUpForm")
     public void initBinder(WebDataBinder webDataBinder){
         webDataBinder.addValidators(signUpFormValidator);
+    }
+
+    @PostMapping("/login")
+    public String login( LoginRequestForm loginRequestForm, HttpServletResponse response) {
+        try {
+            String jwtToken = accountService.loginWithPassword(loginRequestForm.getEmail(), loginRequestForm.getPassword());
+
+            Cookie accessCookie = new Cookie("ACCESS_TOKEN", jwtToken);
+            accessCookie.setHttpOnly(true);  // JS에서 못읽게
+            accessCookie.setSecure(false);    // HTTPS
+            accessCookie.setPath("/");
+            accessCookie.setMaxAge(30 * 60); // 30분
+            response.addCookie(accessCookie);
+
+            if (loginRequestForm.isRememberMe()){
+                String refreshToken = refreshTokenService.createAndStoreRefreshToken(loginRequestForm.getEmail());
+
+                Cookie refreshCookie = new Cookie("REFRESH_TOKEN", refreshToken);
+                refreshCookie.setHttpOnly(true);  // JS에서 못읽게
+                refreshCookie.setSecure(false);    // HTTPS
+                refreshCookie.setPath("/");
+                refreshCookie.setMaxAge(7 * 24 * 60 * 60); // 30분
+                response.addCookie(refreshCookie);
+            } else {
+                Cookie refreshCookie = new Cookie("REFRESH_TOKEN", "");
+                refreshCookie.setHttpOnly(true);
+                refreshCookie.setSecure(false);
+                refreshCookie.setPath("/");
+                refreshCookie.setMaxAge(0); // 쿠키 삭제
+                response.addCookie(refreshCookie);
+            }
+
+            return "redirect:/";
+
+        }catch (RuntimeException e){
+            return "redirect:/login?error";
+        }
+    }
+
+    @PostMapping("/logout")
+    public String logout(@CurrentAccount Account account, HttpServletResponse response) {
+        // 1. Redis에 저장된 RefreshToken 삭제
+        refreshTokenService.deleteRefreshToken(account.getEmail());
+
+        // 2. 클라이언트 쿠키 삭제
+        Cookie accessCookie = new Cookie("ACCESS_TOKEN", "");
+        accessCookie.setHttpOnly(true);
+        accessCookie.setSecure(false); // HTTPS 환경이면 true
+        accessCookie.setPath("/");
+        accessCookie.setMaxAge(0); // 쿠키 삭제
+        response.addCookie(accessCookie);
+
+        Cookie refreshCookie = new Cookie("REFRESH_TOKEN", "");
+        refreshCookie.setHttpOnly(true);
+        refreshCookie.setSecure(false);
+        refreshCookie.setPath("/");
+        refreshCookie.setMaxAge(0);
+        response.addCookie(refreshCookie);
+
+        return "redirect:/";
     }
 
     @GetMapping("/sign-up")
@@ -38,18 +106,25 @@ public class AccountController {
     }
 
     @PostMapping("/sign-up")
-    public String signUpSubmit(@Valid SignUpForm signUpForm , Errors errors){
+    public String signUpSubmit(@Valid SignUpForm signUpForm , Errors errors, HttpServletResponse response){
         if (errors.hasErrors()){
             return "account/sign-up";
         }
 
         Account account = accountService.processNewAccount(signUpForm);
-        accountService.login(account);
+        String token = accountService.loginAfterSignUp(account);
+
+        Cookie cookie = new Cookie("ACCESS_TOKEN", token);
+        cookie.setHttpOnly(true);  // JS에서 못읽게
+        cookie.setSecure(false);    // HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(30 * 60); // 30분
+        response.addCookie(cookie);
         return "redirect:/";
     }
 
     @GetMapping("/check-email-token")
-    public String checkEmailToken(String token, String email, Model model){
+    public String checkEmailToken(String token, String email, Model model , HttpServletResponse response){
         Account account = accountRepository.findByEmail(email);
         String view = "account/checked-email";
         if (account == null){
@@ -62,7 +137,14 @@ public class AccountController {
             return view;
         }
 
-        accountService.completeSignUp(account);
+        String jwtToken = accountService.completeSignUp(account);
+
+        Cookie cookie = new Cookie("ACCESS_TOKEN", jwtToken);
+        cookie.setHttpOnly(true);  // JS에서 못읽게
+        cookie.setSecure(false);    // HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(30 * 60); // 30분
+        response.addCookie(cookie);
 
         model.addAttribute("numberOfUser", accountRepository.count());
         model.addAttribute("nickname", account.getNickname());
@@ -127,7 +209,7 @@ public class AccountController {
             return view;
         }
 
-        accountService.login(account);
+        accountService.loginAfterSignUp(account);
         return view;
     }
 

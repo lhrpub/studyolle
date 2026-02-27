@@ -5,6 +5,7 @@ import com.studyolle.account.form.SignUpForm;
 import com.studyolle.account.repository.AccountRepository;
 import com.studyolle.global.config.AppProperties;
 import com.studyolle.account.entity.Account;
+import com.studyolle.global.token.JwtTokenProvider;
 import com.studyolle.tag.entity.Tag;
 import com.studyolle.zone.entity.Zone;
 import com.studyolle.mail.EmailMessage;
@@ -45,6 +46,7 @@ public class AccountService implements UserDetailsService {
     private final ModelMapper modelMapper;
     private final TemplateEngine templateEngine;
     private final AppProperties appProperties;
+    private final JwtTokenProvider jwtTokenProvider;
 
     public Account processNewAccount(SignUpForm signUpForm) {
         Account newAccount = saveNewAccount(signUpForm);
@@ -89,6 +91,18 @@ public class AccountService implements UserDetailsService {
         session.setAttribute(HttpSessionSecurityContextRepository.SPRING_SECURITY_CONTEXT_KEY, SecurityContextHolder.getContext());
     }
 
+    public String loginWithPassword(String email , String rawPassword){
+        Account account = loadAccountByUserEmail(email);
+        if ( account == null || !passwordEncoder.matches(rawPassword, account.getPassword())){
+            throw new RuntimeException("아이디 또는 비밀번호 오류입니다");
+        }
+        return jwtTokenProvider.createAccessToken(account.getEmail(), List.of("ROLE_USER"));
+    }
+
+    public String loginAfterSignUp(Account account){
+        return jwtTokenProvider.createAccessToken(account.getEmail(), List.of("ROLE_USER"));
+    }
+
     @Transactional(readOnly = true)
     @Override
     public UserDetails loadUserByUsername(String emailOrNickname) throws UsernameNotFoundException {
@@ -104,9 +118,24 @@ public class AccountService implements UserDetailsService {
         return new UserAccount(account);
     }
 
-    public void completeSignUp(Account account) {
+    // JWT 발급용
+    @Transactional(readOnly = true)
+    public Account loadAccountByUserEmail(String email) {
+        Account account = accountRepository.findByEmail(email);
+//        if (account == null){
+//            account = accountRepository.findByNickname(emailOrNickname);
+//        }
+//
+//        if (account == null){
+//            throw new UsernameNotFoundException(emailOrNickname);
+//        }
+
+        return account;
+    }
+
+    public String completeSignUp(Account account) {
         account.completeSignUp();
-        login(account);
+        return loginAfterSignUp(account);
     }
 
     public void updateProfile(Account account, Profile profile) {
@@ -124,10 +153,10 @@ public class AccountService implements UserDetailsService {
         accountRepository.save(account);
     }
 
-    public void updateNickname(Account account, String nickname) {
+    public String updateNickname(Account account, String nickname) {
         account.setNickname(nickname);
         accountRepository.save(account);
-        login(account);
+        return loginAfterSignUp(account);
     }
 
     public void sendLoginLink(Account account) {
