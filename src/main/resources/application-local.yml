@@ -13,3 +13,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+app:
+  host: http://localhost:8080

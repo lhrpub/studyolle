@@ -32,8 +32,7 @@ logging:
             sql:
               BasicBinder: TRACE  # 바인딩 파라미터 로그
 
-app:
-  host: http://localhost:8080
+
 
 server:
   tomcat:

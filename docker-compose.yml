@@ -23,6 +23,7 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+
   app:
     build: .
     container_name: studyolle-app
@@ -38,6 +39,16 @@ services:
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     profiles: ["dev"] # 배포할때만 컨테이너로 띄움
+
+  nginx:
+    build: ./nginx
+    container_name: studyolle-nginx
+    ports:
+      - "80:80"
+      - "443:443"
+    depends_on:
+      - app
+    profiles: ["dev"]
 
 #로컬에 데이터 안남기고 docker가 데이터 관리하도록 named volume 사용
 volumes:
