@@ -5,3 +5,4 @@
   4. ~~자동 로그인 변경 (rember-me --> jwt )~~
   5. CI/CD 구축 (GithubActions)
   6. 배포 테스트 후 https 적용하기
+  7. 배포 완료 후 Terraform 적용하기
