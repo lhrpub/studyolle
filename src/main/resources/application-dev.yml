@@ -13,3 +13,6 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update
+
+app:
+  host: https://mydomain.com #TODO 실제 도메인 적용후 nginx 설정 파일도 수정해야함..
