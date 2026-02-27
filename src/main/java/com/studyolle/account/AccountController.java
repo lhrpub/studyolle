@@ -1,22 +1,26 @@
 package com.studyolle.account;
 
+import com.studyolle.account.form.LoginRequestForm;
 import com.studyolle.account.form.SignUpForm;
 import com.studyolle.account.repository.AccountRepository;
 import com.studyolle.account.service.AccountService;
 import com.studyolle.account.validator.SignUpFormValidator;
 import com.studyolle.account.entity.Account;
 import com.studyolle.global.annotaiton.CurrentAccount;
+import com.studyolle.global.jwt.JwtTokenProvider;
+import jakarta.servlet.http.Cookie;
+import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.validation.Errors;
 import org.springframework.web.bind.WebDataBinder;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.InitBinder;
-import org.springframework.web.bind.annotation.PathVariable;
-import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.support.RedirectAttributes;
+
+import java.util.List;
 
 @Controller
 @RequiredArgsConstructor
@@ -25,10 +29,31 @@ public class AccountController {
     private final SignUpFormValidator signUpFormValidator;
     private final AccountService accountService;
     private final AccountRepository accountRepository;
+    private final PasswordEncoder passwordEncoder;
+    private final JwtTokenProvider jwtTokenProvider;
 
     @InitBinder("signUpForm")
     public void initBinder(WebDataBinder webDataBinder){
         webDataBinder.addValidators(signUpFormValidator);
+    }
+
+    @PostMapping("/login")
+    public String login( LoginRequestForm loginRequestForm, HttpServletResponse response) {
+        Account account = accountService.loadAccountByUsername(loginRequestForm.getUsername());
+
+        if ( account == null || !passwordEncoder.matches(loginRequestForm.getPassword(), account.getPassword())){
+            return "redirect:/login?error";
+        }
+        String token = jwtTokenProvider.createAccessToken(account.getNickname(), List.of("ROLE_USER"));
+
+        Cookie cookie = new Cookie("ACCESS_TOKEN", token);
+        cookie.setHttpOnly(true);  // JS에서 못읽게
+        cookie.setSecure(false);    // HTTPS
+        cookie.setPath("/");
+        cookie.setMaxAge(30 * 60); // 30분
+        response.addCookie(cookie);
+        return "redirect:/";
+
     }
 
     @GetMapping("/sign-up")

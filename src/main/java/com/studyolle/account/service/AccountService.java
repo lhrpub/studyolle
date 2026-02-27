@@ -104,6 +104,21 @@ public class AccountService implements UserDetailsService {
         return new UserAccount(account);
     }
 
+    // JWT 발급용
+    @Transactional(readOnly = true)
+    public Account loadAccountByUsername(String emailOrNickname) {
+        Account account = accountRepository.findByEmail(emailOrNickname);
+        if (account == null){
+            account = accountRepository.findByNickname(emailOrNickname);
+        }
+//
+//        if (account == null){
+//            throw new UsernameNotFoundException(emailOrNickname);
+//        }
+
+        return account;
+    }
+
     public void completeSignUp(Account account) {
         account.completeSignUp();
         login(account);
