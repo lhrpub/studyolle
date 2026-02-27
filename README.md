@@ -2,4 +2,4 @@
   1. flyway 적용
   2. 프로퍼티 파일 민감정보 암호화
   3. Docker Compose 기반 배포 환경
-  4. 자동 로그인 변경 (rember-me --> jwt )
+  4. ~~자동 로그인 변경 (rember-me --> jwt )~~
