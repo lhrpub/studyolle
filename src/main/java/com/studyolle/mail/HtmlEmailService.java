@@ -10,7 +10,6 @@ import org.springframework.mail.javamail.MimeMessageHelper;
 import org.springframework.stereotype.Component;
 
 @Slf4j
-@Profile("dev")
 @Component
 @RequiredArgsConstructor
 public class HtmlEmailService implements EmailService{
