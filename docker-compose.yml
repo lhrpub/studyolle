@@ -1,0 +1,45 @@
+version: "3.9"
+
+services:
+  mysql:
+    image: mysql:8.1
+    container_name: studyolle-mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: root
+      MYSQL_DATABASE: studyolle
+      MYSQL_USER: studyolle
+      MYSQL_PASSWORD: studyolle
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+
+  redis:
+    image: redis:7
+    container_name: studyolle-redis
+    restart: always
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+  app:
+    build: .
+    container_name: studyolle-app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - mysql
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/studyolle?serverTimezone=Asia/Seoul
+      SPRING_DATASOURCE_USERNAME: studyolle
+      SPRING_DATASOURCE_PASSWORD: studyolle
+      SPRING_REDIS_HOST: redis
+      SPRING_REDIS_PORT: 6379
+    profiles: ["dev"] # 배포할때만 컨테이너로 띄움
+
+#로컬에 데이터 안남기고 docker가 데이터 관리하도록 named volume 사용
+volumes:
+  mysql_data:
+  redis_data:
