@@ -25,7 +25,8 @@ DevOps
 - GitHub Actions
 - AWS EC2
 
-추가로 적용 해야 할것
+
+## 추가로 적용 해야 할것
   1. flyway 적용
   2. 프로퍼티 파일 민감정보 암호화
   3. ~~로컬 실행 환경 docker로 변경~~
