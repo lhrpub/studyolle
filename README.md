@@ -31,6 +31,7 @@ DevOps
   2. 프로퍼티 파일 민감정보 암호화
   3. ~~로컬 실행 환경 docker로 변경~~
   4. ~~자동 로그인 변경 (rember-me --> jwt )~~
-  5. CI/CD 구축 (GithubActions)
-  6. 배포 테스트 후 https 적용하기
-  7. 배포 완료 후 Terraform 적용하기
+  5. app 도커 이미지 용량 줄이기 ( 멀티스테이지로 이미지 만들기 )
+  6. CI/CD 구축 (GithubActions)
+  7. 배포 테스트 후 https 적용하기
+  8. 배포 완료 후 Terraform 적용하기
