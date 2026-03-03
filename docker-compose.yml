@@ -14,6 +14,12 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 10s
 
   redis:
     image: redis:7
@@ -23,15 +29,24 @@ services:
       - "6379:6379"
     volumes:
       - redis_data:/data
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+      start_period: 5s
 
   app:
-    build: .
+#    build: .
+    image: lhr5767/studyolle:latest
     container_name: studyolle-app
     ports:
       - "8080:8080"
     depends_on:
-      - mysql
-      - redis
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
     environment:
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/studyolle?serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: studyolle
@@ -41,7 +56,8 @@ services:
     profiles: ["dev"] # 배포할때만 컨테이너로 띄움
 
   nginx:
-    build: ./nginx
+#    build: ./nginx
+    image: lhr5767/studyolle-nginx:latest
     container_name: studyolle-nginx
     ports:
       - "80:80"
