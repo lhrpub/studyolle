@@ -27,12 +27,12 @@ DevOps
 
 
 ## 추가로 적용 해야 할것
-  - [ ] flyway 적용
-  - [ ] 프로퍼티 파일 민감정보 암호화
-  - [x] 로컬 실행 환경 docker로 변경
-  - [x] 배포시 사용할 nginx / app 이미지는 doker hub에서 관리하기 
-  - [x] 자동 로그인 변경 (rember-me --> jwt )
-  - [ ] app 도커 이미지 용량 줄이기 ( 멀티스테이지로 이미지 만들기 )
-  - [ ] CI/CD 구축 (GithubActions)
-  - [ ] 배포 테스트 후 https 적용하기
-  - [ ] 배포 완료 후 Terraform 적용하기
+  - ▢ flyway 적용
+  - ▢ 프로퍼티 파일 민감정보 암호화
+  - ✅ 로컬 실행 환경 docker로 변경
+  - ✅ 배포시 사용할 nginx / app 이미지는 doker hub에서 관리하기 
+  - ✅ 자동 로그인 변경 (rember-me --> jwt )
+  - ▢ app 도커 이미지 용량 줄이기 ( 멀티스테이지로 이미지 만들기 )
+  - ▢ CI/CD 구축 (GithubActions)
+  - ▢ 배포 테스트 후 https 적용하기
+  - ▢ 배포 완료 후 Terraform 적용하기
