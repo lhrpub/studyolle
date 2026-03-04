@@ -86,7 +86,9 @@ DevOps
      ./gradlew bootRun --args='--spring.profiles.active=local'
      ``` 
 
-    
+---
+
+☁️ 배포 환경 (EC2)
 
 ---
 
