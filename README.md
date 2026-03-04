@@ -18,7 +18,6 @@ Backend
 - JPA
 - MySQL
 - Redis
-- Thymeleaf
 
 View
 - Thymeleaf(SSR)
