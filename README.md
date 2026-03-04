@@ -44,8 +44,18 @@ DevOps
    - @EventListener를 통해 관심 태그 및 지역 조건에 맞는 사용자 필터링
    - 가입한 스터디에서 새로운 모임이 생성되면 알림 제공
    - 알림은 사용자 설정에 따라 이메일 또는 웹으로 알림 발송
+4. 검색 기능
+   - 스터디 제목 , 관심주제 , 지역 기반 스터디 검색기능
   
 ---
+
+🐳 Docker 환경
+- Local: MySQL, Redis 컨테이너 사용 (App은 로컬 실행)
+- Production: App, Nginx, MySQL, Redis 전체 Docker Compose 구성
+- 하나의 docker-compose.yml에서 profiles 기능을 활용해 환경 분리
+
+---
+
 
 ⚙️ 아키텍처
 - MySQL과 Redis는 컨테이너로 관리
