@@ -20,6 +20,9 @@ Backend
 - Redis
 - Thymeleaf
 
+View
+- Thymeleaf(SSR)
+
 DevOps
 - Docker
 - Docker Compose
