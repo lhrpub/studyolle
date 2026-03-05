@@ -39,7 +39,6 @@ DevOps
 2. 스터디 및 모임 관리
    - 스터디 생성, 수정, 삭제
    - 스터디 구성원 조회
-   - 관심 태그 및 지역 기반 스터디 검색 기능
    - 스터디 내 개별 모임(Event) 생성 및 일정 관리
 3. 알림 기능
    - 사용자가 설정한 관심 주제와 지역을 기반으로 조건에 맞는 스터디가 생성될 시 알림 제공
@@ -68,6 +67,14 @@ DevOps
 
 ---
 
+🔹 배포환경 
+- GitHub Actions CI/CD를 통해 EC2에 자동 배포
+- Docker 이미지 빌드 → Docker Hub로 push → EC2에서 pull & up
+- EC2에서는 Docker Compose로 MySQL, Redis, App, Nginx 실행
+- Profiles(로컬/배포)로 환경 구분
+
+---
+
 🖥 Local 실행 방법
   - 프로젝트 클론
     ``` bash
@@ -85,10 +92,6 @@ DevOps
      ``` bash
      ./gradlew bootRun --args='--spring.profiles.active=local'
      ``` 
-
----
-
-☁️ 배포 환경 (EC2)
 
 ---
 
