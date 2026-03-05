@@ -25,6 +25,14 @@ public class MainController {
 
     @GetMapping("/")
     public String home(@CurrentAccount Account account, Model model){
+        model.addAttribute(account);
+        model.addAttribute("studyList", studyRepository.findFirst9ByPublishedAndClosedOrderByPublishedDateTimeDesc(true, false));
+
+        return "index";
+    }
+
+    @GetMapping("/main/study")
+    public String studyHome(@CurrentAccount Account account, Model model){
         if (account != null){
             Account accountLoaded = accountRepository.findAccountWithTagsAndZonesById(account.getId());
             model.addAttribute(accountLoaded);
@@ -38,9 +46,8 @@ public class MainController {
                     studyRepository.findFirst5ByMembersContainingAndClosedOrderByPublishedDateTimeDesc(account, false));
             return "index-after-login";
         }
-        model.addAttribute("studyList", studyRepository.findFirst9ByPublishedAndClosedOrderByPublishedDateTimeDesc(true, false));
 
-        return "index";
+        return "redirect:/login";
     }
 
     @GetMapping("/login")
