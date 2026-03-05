@@ -40,8 +40,6 @@ services:
 #    build: .
     image: lhr5767/studyolle:latest
     container_name: studyolle-app
-    ports:
-      - "8080:8080"
     depends_on:
       mysql:
         condition: service_healthy
