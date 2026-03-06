@@ -103,6 +103,6 @@ DevOps
   - ✅ 자동 로그인 변경 (rember-me --> jwt )
   - ▢ 회원가입 인증 이메일 보내기 비동기로 처리하기
   - ▢ app 도커 이미지 용량 줄이기 ( 멀티스테이지로 이미지 만들기 )
-  - ▢ CI/CD 구축 (GithubActions)
+  - ✅ CI/CD 구축 (GithubActions)
   - ✅ 배포 테스트 후 https 적용하기
   - ▢ 배포 완료 후 Terraform 적용하기
