@@ -66,5 +66,8 @@ jobs:
               cd /home/ubuntu/
               export MAIL_USERNAME=${{ secrets.MAIL_USERNAME }}
               export MAIL_PASSWORD=${{ secrets.MAIL_PASSWORD }}
+              export DB_URL=${{ secrets.DB_URL}}
+              export DB_USERNAME=${{ secrets.DB_USERNAME}}
+              export DB_PASSWORD=${{ secrets.DB_PASSWORD}}
               docker compose --profile dev pull
               docker compose --profile dev up -d

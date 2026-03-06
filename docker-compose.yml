@@ -48,9 +48,9 @@ services:
     environment:
       MAIL_USERNAME: ${MAIL_USERNAME}
       MAIL_PASSWORD: ${MAIL_PASSWORD}
-      SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/studyolle?serverTimezone=Asia/Seoul
-      SPRING_DATASOURCE_USERNAME: studyolle
-      SPRING_DATASOURCE_PASSWORD: studyolle
+      SPRING_DATASOURCE_URL: ${DB_URL}
+      SPRING_DATASOURCE_USERNAME: ${DB_USERNAME}
+      SPRING_DATASOURCE_PASSWORD: ${DB_PASSWORD}
       SPRING_REDIS_HOST: redis
       SPRING_REDIS_PORT: 6379
     profiles: ["dev"] # 배포할때만 컨테이너로 띄움
