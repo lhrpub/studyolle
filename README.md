@@ -91,8 +91,18 @@ DevOps
      - IntelliJ 실행
      - application-local.yml 프로파일 사용
      - Active Profile: local
+     - Environment variables 추가
+      ```
+      MAIL_USERNAME=your_email@gmail.com
+      MAIL_PASSWORD=your_app_password
+      ```
    - app 실행 By CLI
      ``` bash
+     ## 환경 변수 설정 ##
+     export MAIL_USERNAME=your_email@gmail.com
+     export MAIL_PASSWORD=your_app_password
+     
+     ## 앱 실행 ##
      ./gradlew bootRun --args='--spring.profiles.active=local'
      ``` 
 
