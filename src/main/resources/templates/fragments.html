@@ -5,6 +5,7 @@
 
 <head th:fragment="head">
   <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>StudyOlle</title>
   <link href="https://fonts.googleapis.com/css?family=Noto+Sans+KR:300,400,500&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/node_modules/bootstrap/dist/css/bootstrap.min.css" />
@@ -101,7 +102,7 @@
 
 <nav th:fragment="main-nav" class="navbar navbar-expand-sm navbar-dark bg-dark">
   <a class="navbar-brand" href="/" th:href="@{/}">
-    <img src="/images/logo_sm.png" width="30" height="30">
+    <img src="/images/logo_sm.png" width="30" height="30" class="img-fluid">
   </a>
   <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent" aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
     <span class="navbar-toggler-icon"></span>
@@ -161,7 +162,7 @@
 
 <footer th:fragment="footer">
   <div class="row justify-content-center">
-    <img class="mb-2" src="/images/logo_long_kr.png" alt="" width="100">
+    <img class="mb-2 img-fluid" src="/images/logo_long_kr.png" alt="" width="100" >
     <small class="d-block mb-3 text-muted">&copy; 2025</small>
   </div>
 </footer>
