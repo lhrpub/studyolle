@@ -46,6 +46,8 @@ services:
       redis:
         condition: service_healthy
     environment:
+      MAIL_USERNAME: ${MAIL_USERNAME}
+      MAIL_PASSWORD: ${MAIL_PASSWORD}
       SPRING_DATASOURCE_URL: jdbc:mysql://mysql:3306/studyolle?serverTimezone=Asia/Seoul
       SPRING_DATASOURCE_USERNAME: studyolle
       SPRING_DATASOURCE_PASSWORD: studyolle
