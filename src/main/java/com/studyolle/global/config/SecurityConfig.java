@@ -31,7 +31,7 @@ public class SecurityConfig {
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .authorizeHttpRequests(auth ->
                 auth.requestMatchers("/","/login", "/sign-up",
-                        "/check-email-token", "/email-login", "/login-by-email", "/search/study").permitAll()
+                        "/check-email-token", "/email-login", "/login-by-email", "/search/study","/error").permitAll()
                         .requestMatchers(HttpMethod.GET, "/profile/*").permitAll()
                         .requestMatchers("/node_modules/**").permitAll()
                         .requestMatchers(PathRequest.toStaticResources().atCommonLocations()).permitAll()
@@ -42,6 +42,15 @@ public class SecurityConfig {
         http.logout(logout -> logout.disable());
 
         http.addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);
+
+//        http.exceptionHandling(ex -> ex
+//                .authenticationEntryPoint((request, response, authException) -> {
+//                    response.sendError(403);
+//                })
+//                .accessDeniedHandler((request, response, accessDeniedException) -> {
+//                    response.sendError(403);
+//                })
+//        );
 
 
 
