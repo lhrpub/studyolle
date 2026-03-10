@@ -67,7 +67,7 @@ public class Study {
 
     private boolean useBanner;
 
-    private int memberCount;
+    private int memberCount = 1;
 
     public void addManager(Account account) {
         this.managers.add(account);
