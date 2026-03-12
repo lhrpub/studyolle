@@ -45,6 +45,16 @@ public class StudyService {
         return study;
     }
 
+    public Study getStudyForChat(String path , Account account){
+        Study study = studyRepository.findWithManagersAndMembersByPath(path);
+
+//        if(!study.isParticipant(account)){
+//            throw new AccessDeniedException("접근 권한 없음");
+//        }
+
+        return study;
+    }
+
     public void updateStudyDescription(Study study, StudyDescriptionForm studyDescriptionForm) {
         modelMapper.map(studyDescriptionForm, study);
         eventPublisher.publishEvent(new StudyUpdateEvent(study, "스터디 소개를 수정했습니다."));
