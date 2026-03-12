@@ -9,6 +9,7 @@ import com.studyolle.study.service.StudyService;
 import com.studyolle.study.validator.StudyFormValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -22,6 +23,7 @@ import org.springframework.web.bind.annotation.PostMapping;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class StudyController {
@@ -82,5 +84,16 @@ public class StudyController {
         Study study = studyRepository.findStudyWithMembersByPath(path);
         studyService.removeMember(study, account);
         return "redirect:/study/" + study.getEncodedPath() + "/members";
+    }
+
+    @GetMapping("/study/{path}/chat")
+    public String viewChat(@CurrentAccount Account account, @PathVariable String path, Model model){
+        Study study = studyService.getStudy(path);
+        log.info("account = {}" , account.getId());
+        log.info("account = {}" , account.getEmail());
+        log.info("account = {}" , account.getNickname());
+        model.addAttribute(account);
+        model.addAttribute(study);
+        return "chat/study-chat";
     }
 }
