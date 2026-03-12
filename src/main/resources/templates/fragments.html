@@ -110,14 +110,21 @@
         display:flex;
     }
 
+
     .chat-message.mine{
         justify-content:flex-end;
     }
+    .chat-message.other{
+        justify-content:flex-start;
+    }
+
+
 
     .chat-bubble{
         padding:10px 14px;
         border-radius:15px;
-        max-width:60%;
+        word-break:keep-all !important;
+        overflow-wrap:break-word;
     }
 
     .mine .chat-bubble{
@@ -130,11 +137,16 @@
         border:1px solid #ddd;
     }
 
+    .message-container{
+    max-width:60%;
+}
+
     .sender{
         font-size:12px;
         color:gray;
         margin-bottom:2px;
     }
+
   </style>
 </head>
 

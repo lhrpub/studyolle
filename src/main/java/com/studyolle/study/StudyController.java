@@ -89,9 +89,6 @@ public class StudyController {
     @GetMapping("/study/{path}/chat")
     public String viewChat(@CurrentAccount Account account, @PathVariable String path, Model model){
         Study study = studyService.getStudy(path);
-        log.info("account = {}" , account.getId());
-        log.info("account = {}" , account.getEmail());
-        log.info("account = {}" , account.getNickname());
         model.addAttribute(account);
         model.addAttribute(study);
         return "chat/study-chat";

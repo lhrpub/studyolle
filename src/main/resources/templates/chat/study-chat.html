@@ -29,86 +29,88 @@
 
   let stompClient = null;
 
-  function connect(){
-
-  const socket = new SockJS('/ws');
-  stompClient = Stomp.over(socket);
-
-  stompClient.connect({},function(){
-
-  stompClient.subscribe('/topic/study/'+studyId,function(msg){
-
-  const data = JSON.parse(msg.body);
-
-  console.log(data);
-
-  const box = document.getElementById("chat-box");
-
-  let type = data.senderId === senderId ? "mine" : "other";
-
-  let html = "";
-
-  if(type === "mine"){
-
-  html = `
-  <div class="chat-message mine">
-  <div class="chat-bubble">
-  ${data.message}
-  </div>
-  </div>
-  `;
-
-  }else{
-
-  html = `
-  <div class="chat-message other">
-  <div>
-  <div class="sender">${data.senderId}</div>
-  <div class="chat-bubble">
-  ${data.message}
-  </div>
-  </div>
-  </div>
-  `;
-
+  function loadChatHistory(){
+    fetch("/api/chat/" + studyId)
+      .then(res => res.json())
+      .then(data => {
+              data.forEach(msg => {
+                renderMessage(msg);
+            });
+        });
   }
 
-  box.innerHTML += html;
+  function connect() {
 
-  box.scrollTop = box.scrollHeight;
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
 
+    stompClient.connect({}, function () {
+        stompClient.subscribe('/topic/study/' + studyId, function (msg) {
+            const data = JSON.parse(msg.body);
+            renderMessage(data);
+        });
+    });
+  }
+
+  function renderMessage(data) {
+
+    const box = document.getElementById("chat-box");
+
+    const messageWrapper = document.createElement("div");
+    messageWrapper.classList.add("chat-message");
+
+    const container = document.createElement("div");
+    container.classList.add("message-container");
+
+    const bubble = document.createElement("div");
+    bubble.classList.add("chat-bubble");
+    bubble.textContent = data.message; // XSS 방지
+
+    if (data.senderId === senderId) {
+
+        messageWrapper.classList.add("mine");
+        container.appendChild(bubble);
+
+    } else {
+
+        messageWrapper.classList.add("other");
+
+        const senderDiv = document.createElement("div");
+        senderDiv.classList.add("sender");
+        senderDiv.textContent = data.senderName;
+
+        container.appendChild(senderDiv);
+        container.appendChild(bubble);
+    }
+    messageWrapper.appendChild(container);
+    box.appendChild(messageWrapper);
+    box.scrollTop = box.scrollHeight;
+  }
+
+  function sendMessage() {
+
+    const input = document.getElementById("message");
+    const message = input.value.trim();
+
+    if (message === "") return;
+
+    stompClient.send("/app/chat.send", {}, JSON.stringify({
+        studyId: studyId,
+        senderId: senderId,
+        senderName: senderName,
+        message: message
+    }));
+
+    input.value = "";
+  }
+
+  document.getElementById("message").addEventListener("keypress", function(e) {
+    if (e.key === "Enter") {
+        sendMessage();
+    }
   });
 
-  });
-
-  }
-
-  function sendMessage(){
-
-  const input = document.getElementById("message");
-  const message = input.value;
-
-  if(message.trim() === "") return;
-
-  stompClient.send("/app/chat.send",{},JSON.stringify({
-  studyId:studyId,
-  senderId:senderId,
-  senderName:senderName,
-  message:message
-  }));
-
-  input.value="";
-
-  }
-
-  document.getElementById("message").addEventListener("keypress",function(e){
-
-  if(e.key==="Enter"){
-  sendMessage();
-  }
-
-  });
-
+  loadChatHistory();
   connect();
 
 </script>
