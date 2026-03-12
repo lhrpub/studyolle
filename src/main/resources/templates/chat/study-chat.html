@@ -26,8 +26,47 @@
   let studyId = [[${study.id}]];
   let senderId = [[${account.id}]];
   let senderName = [[${account.nickname}]];
+  let lastSenderId = null;
+  let lastMessageMinute = null;
+
+  let page  = 0;
+  let loading = false;
+  let hasNext = true;
 
   let stompClient = null;
+
+  function loadOlderMessages(){
+
+    if(loading || !hasNext) return;
+
+    loading = true;
+
+    fetch(`/api/chat/${studyId}?page=${page}&size=20`)
+        .then(res => res.json())
+        .then(data => {
+
+            const box = document.getElementById("chat-box");
+
+            const scrollHeightBefore = box.scrollHeight;
+
+            data.content.forEach(msg => {
+                renderMessageTop(msg);
+            });
+
+            const scrollHeightAfter = box.scrollHeight;
+
+            box.scrollTop = scrollHeightAfter - scrollHeightBefore;
+
+            hasNext = !data.last;
+            page++;
+
+            loading = false;
+        });
+  }
+
+
+
+
 
   function loadChatHistory(){
     fetch("/api/chat/" + studyId)
@@ -52,39 +91,113 @@
     });
   }
 
+  function createMessageElement(data){
+      const messageWrapper = document.createElement("div");
+        messageWrapper.classList.add("chat-message");
+
+        const container = document.createElement("div");
+        container.classList.add("message-container");
+
+        const bubble = document.createElement("div");
+        bubble.classList.add("chat-bubble");
+        bubble.textContent = data.message; // XSS 방지
+
+        const time = document.createElement("div");
+        time.classList.add("chat-time");
+        time.textContent = formatTime(data.sentAt);
+
+        const currentMinute = getMinute(data.sentAt);
+
+
+
+        if (data.senderId === senderId) {
+
+            messageWrapper.classList.add("mine");
+            container.appendChild(bubble);
+            container.appendChild(time);
+
+
+        } else {
+            messageWrapper.classList.add("other");
+
+            const senderDiv = document.createElement("div");
+            senderDiv.classList.add("sender");
+            senderDiv.textContent = data.senderName;
+
+            container.appendChild(senderDiv);
+            container.appendChild(bubble);
+            container.appendChild(time);
+
+        }
+        messageWrapper.appendChild(container);
+        messageWrapper.dataset.sender = data.senderId;
+        messageWrapper.dataset.minute = getMinute(data.sentAt);
+
+        lastSenderId = data.senderId;
+        lastMessageMinute = currentMinute;
+
+        return messageWrapper;
+  }
+
   function renderMessage(data) {
 
     const box = document.getElementById("chat-box");
 
-    const messageWrapper = document.createElement("div");
-    messageWrapper.classList.add("chat-message");
+    const isBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
 
-    const container = document.createElement("div");
-    container.classList.add("message-container");
+    const messageElement = createMessageElement(data);
 
-    const bubble = document.createElement("div");
-    bubble.classList.add("chat-bubble");
-    bubble.textContent = data.message; // XSS 방지
+    const prev = box.lastElementChild;
 
-    if (data.senderId === senderId) {
+    box.appendChild(messageElement);
 
-        messageWrapper.classList.add("mine");
-        container.appendChild(bubble);
+    if(prev){
 
-    } else {
+        const prevSender = prev.dataset.sender;
+        const prevMinute = prev.dataset.minute;
 
-        messageWrapper.classList.add("other");
+        const currentMinute = getMinute(data.sentAt);
 
-        const senderDiv = document.createElement("div");
-        senderDiv.classList.add("sender");
-        senderDiv.textContent = data.senderName;
+        if(prevSender == data.senderId && prevMinute == currentMinute){
+            const prevTime = prev.querySelector(".chat-time");
+            if(prevTime) prevTime.remove();
+            const sender = messageElement.querySelector(".sender");
+            if(sender) sender.remove();
+        }
 
-        container.appendChild(senderDiv);
-        container.appendChild(bubble);
     }
-    messageWrapper.appendChild(container);
-    box.appendChild(messageWrapper);
-    box.scrollTop = box.scrollHeight;
+
+    if(isBottom){
+      box.scrollTop = box.scrollHeight;
+    }
+  }
+
+
+  function renderMessageTop(data){
+
+    const box = document.getElementById("chat-box");
+
+    const messageWrapper = createMessageElement(data);
+
+    const next = box.firstElementChild;
+
+    box.prepend(messageWrapper);
+
+    if(next){
+
+        const nextSender = next.dataset.sender;
+        const nextMinute = next.dataset.minute;
+
+        const currentMinute = getMinute(data.sentAt);
+
+        if(nextSender == data.senderId && nextMinute == currentMinute){
+            const time = messageWrapper.querySelector(".chat-time");
+            if(time) time.remove();
+            const sender = next.querySelector(".sender");
+            if(sender) sender.remove();
+        }
+
+    }
   }
 
   function sendMessage() {
@@ -110,9 +223,39 @@
     }
   });
 
-  loadChatHistory();
+  function formatTime(dateString){
+
+    const date = new Date(dateString);
+
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+
+    const ampm = hours >= 12 ? "오후" : "오전";
+
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+
+    return ampm + " " + hours + ":" + minutes;
+  }
+
+  function getMinute(dateString){
+    const date = new Date(dateString);
+    return date.getHours() + ":" + date.getMinutes();
+  }
+
+
+  loadOlderMessages();
   connect();
 
+  const box = document.getElementById("chat-box");
+
+  box.addEventListener("scroll", function(){
+    if(box.scrollTop <= 10){
+        loadOlderMessages();
+    }
+  });
 </script>
 
 </body>
