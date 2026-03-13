@@ -213,20 +213,38 @@
     messageWrapper.dataset.date = getDateStr(data.sentAt);
     messageWrapper.dataset.sentAt = data.sentAt;
 
-    const next = box.firstElementChild;
+<!--    const next = box.firstElementChild;-->
 
     //날짜 구분선 삽입 (메시지 위)
     const currentDateStr = messageWrapper.dataset.date;
-    const nextDateStr = next ? next.dataset.date : null;
 
+    box.prepend(messageWrapper);
+
+    const next = messageWrapper.nextElementSibling;
+    let nextDateStr = next ? next.dataset.date : null;
+
+
+
+    while(next){
+        if(next.classList.contains("date-divider")){
+            nextDateStr = next.textContent;
+            break;
+        } else if(next.dataset && next.dataset.date){
+            nextDateStr = next.dataset.date;
+            break;
+        }
+        next = next.nextElementSibling;
+    }
+
+    // 날짜가 다르면 메시지 위에 divider 삽입
     if(nextDateStr !== currentDateStr){
         const divider = document.createElement("div");
         divider.classList.add("date-divider");
         divider.textContent = currentDateStr;
-        box.insertBefore(divider, next || box.firstChild); // 안전하게 next 앞에 넣음
+
+        box.insertBefore(divider, messageWrapper);
     }
 
-    box.prepend(messageWrapper);
 
     if(next){
 
