@@ -218,8 +218,9 @@
   }
 
   document.getElementById("message").addEventListener("keypress", function(e) {
-    if (e.key === "Enter") {
-        sendMessage();
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage()
     }
   });
 

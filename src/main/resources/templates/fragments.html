@@ -125,6 +125,8 @@
         border-radius:15px;
         word-break:keep-all !important;
         overflow-wrap:break-word;
+        white-space: pre-wrap;
+
     }
 
     .mine .chat-bubble{
@@ -743,9 +745,9 @@
 
             <div class="input-group">
 
-                <input type="text" id="message" class="form-control" placeholder="메시지 입력">
+                <textarea  id="message" class="form-control" placeholder="메시지 입력"></textarea>
 
-                <button class="btn btn-primary" onclick="sendMessage()">전송</button>
+                <button id="send-btn" class="btn btn-primary" onclick="sendMessage()">전송</button>
 
             </div>
 
