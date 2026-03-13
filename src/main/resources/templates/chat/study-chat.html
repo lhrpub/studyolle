@@ -146,10 +146,24 @@
     const isBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
 
     const messageElement = createMessageElement(data);
+    messageElement.dataset.date = getDateStr(data.sentAt);
+    messageElement.dataset.sentAt = data.sentAt;
 
     const prev = box.lastElementChild;
 
     box.appendChild(messageElement);
+
+    // 2️⃣ 날짜 구분선 삽입
+    const prevDateStr = prev ? prev.dataset.date : null;
+    const currentDateStr = messageElement.dataset.date;
+
+    if(prevDateStr !== currentDateStr){
+        const divider = document.createElement("div");
+        divider.classList.add("date-divider");
+        divider.textContent = currentDateStr;
+        box.insertBefore(divider, messageElement); // 메시지 바로 위에
+    }
+
 
     if(prev){
 
@@ -169,17 +183,48 @@
 
     if(isBottom){
       box.scrollTop = box.scrollHeight;
+      hideNewMessageIndicator();
+    } else{
+      showNewMessageIndicator();
     }
   }
 
+  function showNewMessageIndicator() {
+    const indicator = document.getElementById("new-message-indicator");
+    indicator.style.display = "block";
+  }
+
+  function hideNewMessageIndicator() {
+    const indicator = document.getElementById("new-message-indicator");
+    indicator.style.display = "none";
+  }
+
+  document.getElementById("new-message-indicator").addEventListener("click", function(){
+    const box = document.getElementById("chat-box");
+    box.scrollTop = box.scrollHeight; // 최신 메시지로 이동
+    hideNewMessageIndicator();
+  });
+
 
   function renderMessageTop(data){
-
     const box = document.getElementById("chat-box");
-
     const messageWrapper = createMessageElement(data);
 
+    messageWrapper.dataset.date = getDateStr(data.sentAt);
+    messageWrapper.dataset.sentAt = data.sentAt;
+
     const next = box.firstElementChild;
+
+    //날짜 구분선 삽입 (메시지 위)
+    const currentDateStr = messageWrapper.dataset.date;
+    const nextDateStr = next ? next.dataset.date : null;
+
+    if(nextDateStr !== currentDateStr){
+        const divider = document.createElement("div");
+        divider.classList.add("date-divider");
+        divider.textContent = currentDateStr;
+        box.insertBefore(divider, next || box.firstChild); // 안전하게 next 앞에 넣음
+    }
 
     box.prepend(messageWrapper);
 
@@ -240,6 +285,35 @@
 
     return ampm + " " + hours + ":" + minutes;
   }
+
+  function getDateStr(dateString){
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`; // 예: 2026-03-13
+  }
+
+<!--  function insertDateDivider(box, messageElement, prepend = false) {-->
+<!--    const currentDateStr = getDateStr(messageElement.dataset.sentAt);-->
+
+<!--    // 이전/다음 메시지와 비교-->
+<!--    let sibling = prepend ? box.firstElementChild : messageElement.previousElementSibling;-->
+<!--    let siblingDateStr = sibling ? sibling.dataset.date : null;-->
+
+<!--    if(siblingDateStr !== currentDateStr){-->
+<!--        const divider = document.createElement("div");-->
+<!--        divider.classList.add("date-divider");-->
+<!--        divider.textContent = currentDateStr;-->
+
+<!--        // 메시지 바로 위/아래에 넣기-->
+<!--        if(prepend){-->
+<!--            box.insertBefore(divider, messageElement);-->
+<!--        } else {-->
+<!--            box.insertBefore(divider, messageElement);-->
+<!--        }-->
+<!--    }-->
+<!--  }-->
 
   function getMinute(dateString){
     const date = new Date(dateString);
