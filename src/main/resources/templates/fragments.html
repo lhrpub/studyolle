@@ -171,10 +171,29 @@
     }
     .date-divider {
     text-align: center;
-    color: #666;
+    margin: 10px 0;
+    position: relative;
     font-weight: bold;
-    margin: 15px 0;
-    }
+    color: #666;
+}
+
+.date-divider::before,
+.date-divider::after {
+    content: "";
+    position: absolute;
+    top: 50%;
+    width: 40%;
+    height: 1px;
+    background: #ccc;
+}
+
+.date-divider::before {
+    left: 0;
+}
+
+.date-divider::after {
+    right: 0;
+}
   </style>
 </head>
 

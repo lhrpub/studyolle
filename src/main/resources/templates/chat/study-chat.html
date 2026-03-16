@@ -35,6 +35,23 @@
 
   let stompClient = null;
 
+  let lastMessageDateMap = {};
+
+  // 초기 페이지 로딩 시 메시지 불러오기
+  function loadInitialMessages() {
+      fetch(`/api/chat/${studyId}?page=0&size=50`)
+          .then(res => res.json())
+          .then(data => {
+              lastMessageDateMap = {}; // 날짜 중복 방지 초기화
+              renderMessages(data.content.reverse(), false , true);
+              page = 1;
+              hasNext = !data.last;
+
+              const box = document.getElementById("chat-box");
+              box.scrollTop = box.scrollHeight; // 맨 아래로 이동
+          });
+  }
+
   function loadOlderMessages(){
 
     if(loading || !hasNext) return;
@@ -49,9 +66,7 @@
 
             const scrollHeightBefore = box.scrollHeight;
 
-            data.content.forEach(msg => {
-                renderMessageTop(msg);
-            });
+            renderMessages(data.content, true);
 
             const scrollHeightAfter = box.scrollHeight;
 
@@ -64,19 +79,77 @@
         });
   }
 
+  function renderMessages(messages, isTopLoad = false, isInitialLoad = false){
+    const box = document.getElementById("chat-box");
+    const fragment = document.createDocumentFragment();
 
+    // 메시지 시간순 정렬
+    messages.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
 
+    let lastDate = null;
+    if (isTopLoad && box.firstChild) {
+        // 맨 위 prepend일 경우 기존 맨 위 메시지의 날짜
+        const firstMsg = Array.from(box.children).find(el => el.classList.contains("chat-message"));
+        if (firstMsg) lastDate = firstMsg.dataset.date;
+    } else if (!isTopLoad && box.lastChild) {
+        const lastMsg = Array.from(box.children).reverse().find(el => el.classList.contains("chat-message"));
+        if (lastMsg) lastDate = lastMsg.dataset.date;
+    }
 
+    messages.forEach(msg => {
+        const msgDate = getDateStr(msg.sentAt);
+        const msgWrapper = createMessageElement(msg);
+        msgWrapper.dataset.date = msgDate;
+        msgWrapper.dataset.minute = getMinute(msg.sentAt);
+        msgWrapper.dataset.sender = msg.senderId;
 
-  function loadChatHistory(){
-    fetch("/api/chat/" + studyId)
-      .then(res => res.json())
-      .then(data => {
-              data.forEach(msg => {
-                renderMessage(msg);
-            });
-        });
-  }
+        // 날짜가 바뀌면 divider 생성
+        if (msgDate !== lastDate) {
+            const divider = document.createElement("div");
+            divider.classList.add("date-divider");
+            divider.textContent = msgDate;
+
+            if (isTopLoad) fragment.appendChild(divider);
+            else fragment.appendChild(divider);
+
+            lastDate = msgDate;
+        }
+
+        fragment.appendChild(msgWrapper);
+    });
+
+    if (isTopLoad) {
+        const scrollBefore = box.scrollHeight;
+        box.insertBefore(fragment, box.firstChild);
+        box.scrollTop += box.scrollHeight - scrollBefore; // 이전 메시지 불러오기 후 위치 유지
+    } else {
+        box.appendChild(fragment);
+        if (!isInitialLoad) {
+            const isBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+            if (isBottom) {
+                box.scrollTop = box.scrollHeight;
+                hideNewMessageIndicator();
+            } else showNewMessageIndicator();
+        }
+    }
+
+    // 같은 사람 메시지 묶기
+    const children = Array.from(box.children);
+    for (let i = 0; i < children.length; i++) {
+        const el = children[i];
+        if (!el.classList.contains("chat-message")) continue;
+
+        const prev = children[i - 1];
+        if (prev && prev.classList.contains("chat-message")) {
+            if (el.dataset.sender === prev.dataset.sender && el.dataset.minute === prev.dataset.minute) {
+                const senderDiv = el.querySelector(".sender");
+                const timeDiv = prev.querySelector(".chat-time");
+                if (senderDiv) senderDiv.remove();
+                if (timeDiv) timeDiv.remove();
+            }
+        }
+    }
+}
 
   function connect() {
 
@@ -86,7 +159,14 @@
     stompClient.connect({}, function () {
         stompClient.subscribe('/topic/study/' + studyId, function (msg) {
             const data = JSON.parse(msg.body);
-            renderMessage(data);
+                        renderMessages([data], false);
+                        // 내가 보낸 메시지라면 바로 스크롤 맨 아래
+                        if(data.senderId === senderId){
+                            const box = document.getElementById("chat-box");
+                            box.scrollTop = box.scrollHeight;
+                            hideNewMessageIndicator();
+                        }
+
         });
     });
   }
@@ -139,55 +219,7 @@
         return messageWrapper;
   }
 
-  function renderMessage(data) {
 
-    const box = document.getElementById("chat-box");
-
-    const isBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
-
-    const messageElement = createMessageElement(data);
-    messageElement.dataset.date = getDateStr(data.sentAt);
-    messageElement.dataset.sentAt = data.sentAt;
-
-    const prev = box.lastElementChild;
-
-    box.appendChild(messageElement);
-
-    // 2️⃣ 날짜 구분선 삽입
-    const prevDateStr = prev ? prev.dataset.date : null;
-    const currentDateStr = messageElement.dataset.date;
-
-    if(prevDateStr !== currentDateStr){
-        const divider = document.createElement("div");
-        divider.classList.add("date-divider");
-        divider.textContent = currentDateStr;
-        box.insertBefore(divider, messageElement); // 메시지 바로 위에
-    }
-
-
-    if(prev){
-
-        const prevSender = prev.dataset.sender;
-        const prevMinute = prev.dataset.minute;
-
-        const currentMinute = getMinute(data.sentAt);
-
-        if(prevSender == data.senderId && prevMinute == currentMinute){
-            const prevTime = prev.querySelector(".chat-time");
-            if(prevTime) prevTime.remove();
-            const sender = messageElement.querySelector(".sender");
-            if(sender) sender.remove();
-        }
-
-    }
-
-    if(isBottom){
-      box.scrollTop = box.scrollHeight;
-      hideNewMessageIndicator();
-    } else{
-      showNewMessageIndicator();
-    }
-  }
 
   function showNewMessageIndicator() {
     const indicator = document.getElementById("new-message-indicator");
@@ -206,62 +238,7 @@
   });
 
 
-  function renderMessageTop(data){
-    const box = document.getElementById("chat-box");
-    const messageWrapper = createMessageElement(data);
 
-    messageWrapper.dataset.date = getDateStr(data.sentAt);
-    messageWrapper.dataset.sentAt = data.sentAt;
-
-<!--    const next = box.firstElementChild;-->
-
-    //날짜 구분선 삽입 (메시지 위)
-    const currentDateStr = messageWrapper.dataset.date;
-
-    box.prepend(messageWrapper);
-
-    const next = messageWrapper.nextElementSibling;
-    let nextDateStr = next ? next.dataset.date : null;
-
-
-
-    while(next){
-        if(next.classList.contains("date-divider")){
-            nextDateStr = next.textContent;
-            break;
-        } else if(next.dataset && next.dataset.date){
-            nextDateStr = next.dataset.date;
-            break;
-        }
-        next = next.nextElementSibling;
-    }
-
-    // 날짜가 다르면 메시지 위에 divider 삽입
-    if(nextDateStr !== currentDateStr){
-        const divider = document.createElement("div");
-        divider.classList.add("date-divider");
-        divider.textContent = currentDateStr;
-
-        box.insertBefore(divider, messageWrapper);
-    }
-
-
-    if(next){
-
-        const nextSender = next.dataset.sender;
-        const nextMinute = next.dataset.minute;
-
-        const currentMinute = getMinute(data.sentAt);
-
-        if(nextSender == data.senderId && nextMinute == currentMinute){
-            const time = messageWrapper.querySelector(".chat-time");
-            if(time) time.remove();
-            const sender = next.querySelector(".sender");
-            if(sender) sender.remove();
-        }
-
-    }
-  }
 
   function sendMessage() {
 
@@ -278,7 +255,9 @@
     }));
 
     input.value = "";
+
   }
+
 
   document.getElementById("message").addEventListener("keypress", function(e) {
     if (e.key === "Enter" && !e.shiftKey) {
@@ -312,34 +291,16 @@
     return `${year}-${month}-${day}`; // 예: 2026-03-13
   }
 
-<!--  function insertDateDivider(box, messageElement, prepend = false) {-->
-<!--    const currentDateStr = getDateStr(messageElement.dataset.sentAt);-->
-
-<!--    // 이전/다음 메시지와 비교-->
-<!--    let sibling = prepend ? box.firstElementChild : messageElement.previousElementSibling;-->
-<!--    let siblingDateStr = sibling ? sibling.dataset.date : null;-->
-
-<!--    if(siblingDateStr !== currentDateStr){-->
-<!--        const divider = document.createElement("div");-->
-<!--        divider.classList.add("date-divider");-->
-<!--        divider.textContent = currentDateStr;-->
-
-<!--        // 메시지 바로 위/아래에 넣기-->
-<!--        if(prepend){-->
-<!--            box.insertBefore(divider, messageElement);-->
-<!--        } else {-->
-<!--            box.insertBefore(divider, messageElement);-->
-<!--        }-->
-<!--    }-->
-<!--  }-->
-
   function getMinute(dateString){
     const date = new Date(dateString);
     return date.getHours() + ":" + date.getMinutes();
   }
 
+  window.addEventListener("DOMContentLoaded", () => {
+    loadInitialMessages();
+});
 
-  loadOlderMessages();
+<!--  loadOlderMessages();-->
   connect();
 
   const box = document.getElementById("chat-box");
