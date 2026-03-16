@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
+<head th:replace="fragments.html :: head"></head>
+
+<body>
+
+<div th:replace="fragments.html :: main-nav"></div>
+<div th:replace="fragments.html :: study-banner"></div>
+<div class="container">
+  <div th:replace="fragments.html :: study-info"></div>
+  <div th:replace="fragments.html :: study-menu(studyMenu='chat')"></div>
+
+  <div th:replace="fragments.html :: study-chat"></div>
+
+  <div th:replace="fragments.html :: footer"></div>
+</div>
+
+<script th:replace="fragments.html :: tooltip"></script>
+
+
+<script src="https://cdn.jsdelivr.net/npm/sockjs-client/dist/sockjs.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/stompjs/lib/stomp.min.js"></script>
+
+<script th:inline="javascript">
+
+  let studyId = [[${study.id}]];
+  let senderId = [[${account.id}]];
+  let senderName = [[${account.nickname}]];
+  let lastSenderId = null;
+  let lastMessageMinute = null;
+
+  let page  = 0;
+  let loading = false;
+  let hasNext = true;
+
+  let stompClient = null;
+
+  let lastMessageDateMap = {};
+
+  // 초기 페이지 로딩 시 메시지 불러오기
+  function loadInitialMessages() {
+      fetch(`/api/chat/${studyId}?page=0&size=50`)
+          .then(res => res.json())
+          .then(data => {
+              lastMessageDateMap = {}; // 날짜 중복 방지 초기화
+              renderMessages(data.content.reverse(), false , true);
+              page = 1;
+              hasNext = !data.last;
+
+              const box = document.getElementById("chat-box");
+              box.scrollTop = box.scrollHeight; // 맨 아래로 이동
+          });
+  }
+
+  function loadOlderMessages(){
+
+    if(loading || !hasNext) return;
+
+    loading = true;
+
+    fetch(`/api/chat/${studyId}?page=${page}&size=20`)
+        .then(res => res.json())
+        .then(data => {
+
+            const box = document.getElementById("chat-box");
+
+            const scrollHeightBefore = box.scrollHeight;
+
+            renderMessages(data.content, true);
+
+            const scrollHeightAfter = box.scrollHeight;
+
+            box.scrollTop = scrollHeightAfter - scrollHeightBefore;
+
+            hasNext = !data.last;
+            page++;
+
+            loading = false;
+        });
+  }
+
+  function renderMessages(messages, isTopLoad = false, isInitialLoad = false){
+    const box = document.getElementById("chat-box");
+    const fragment = document.createDocumentFragment();
+
+    // 메시지 시간순 정렬
+    messages.sort((a, b) => new Date(a.sentAt) - new Date(b.sentAt));
+
+    let lastDate = null;
+    if (isTopLoad && box.firstChild) {
+        // 맨 위 prepend일 경우 기존 맨 위 메시지의 날짜
+        const firstMsg = Array.from(box.children).find(el => el.classList.contains("chat-message"));
+        if (firstMsg) lastDate = firstMsg.dataset.date;
+    } else if (!isTopLoad && box.lastChild) {
+        const lastMsg = Array.from(box.children).reverse().find(el => el.classList.contains("chat-message"));
+        if (lastMsg) lastDate = lastMsg.dataset.date;
+    }
+
+    messages.forEach(msg => {
+        const msgDate = getDateStr(msg.sentAt);
+        const msgWrapper = createMessageElement(msg);
+        msgWrapper.dataset.date = msgDate;
+        msgWrapper.dataset.minute = getMinute(msg.sentAt);
+        msgWrapper.dataset.sender = msg.senderId;
+
+        // 날짜가 바뀌면 divider 생성
+        if (msgDate !== lastDate) {
+            const divider = document.createElement("div");
+            divider.classList.add("date-divider");
+            divider.textContent = msgDate;
+
+            if (isTopLoad) fragment.appendChild(divider);
+            else fragment.appendChild(divider);
+
+            lastDate = msgDate;
+        }
+
+        fragment.appendChild(msgWrapper);
+    });
+
+    if (isTopLoad) {
+        const scrollBefore = box.scrollHeight;
+        box.insertBefore(fragment, box.firstChild);
+        box.scrollTop += box.scrollHeight - scrollBefore; // 이전 메시지 불러오기 후 위치 유지
+    } else {
+        box.appendChild(fragment);
+        if (!isInitialLoad) {
+            const isBottom = box.scrollHeight - box.scrollTop - box.clientHeight < 50;
+            if (isBottom) {
+                box.scrollTop = box.scrollHeight;
+                hideNewMessageIndicator();
+            } else showNewMessageIndicator();
+        }
+    }
+
+    // 같은 사람 메시지 묶기
+    const children = Array.from(box.children);
+    for (let i = 0; i < children.length; i++) {
+        const el = children[i];
+        if (!el.classList.contains("chat-message")) continue;
+
+        const prev = children[i - 1];
+        if (prev && prev.classList.contains("chat-message")) {
+            if (el.dataset.sender === prev.dataset.sender && el.dataset.minute === prev.dataset.minute) {
+                const senderDiv = el.querySelector(".sender");
+                const timeDiv = prev.querySelector(".chat-time");
+                if (senderDiv) senderDiv.remove();
+                if (timeDiv) timeDiv.remove();
+            }
+        }
+    }
+}
+
+  function connect() {
+
+    const socket = new SockJS('/ws');
+    stompClient = Stomp.over(socket);
+
+    stompClient.connect({}, function () {
+        stompClient.subscribe('/topic/study/' + studyId, function (msg) {
+            const data = JSON.parse(msg.body);
+                        renderMessages([data], false);
+                        // 내가 보낸 메시지라면 바로 스크롤 맨 아래
+                        if(data.senderId === senderId){
+                            const box = document.getElementById("chat-box");
+                            box.scrollTop = box.scrollHeight;
+                            hideNewMessageIndicator();
+                        }
+
+        });
+    });
+  }
+
+  function createMessageElement(data){
+      const messageWrapper = document.createElement("div");
+        messageWrapper.classList.add("chat-message");
+
+        const container = document.createElement("div");
+        container.classList.add("message-container");
+
+        const bubble = document.createElement("div");
+        bubble.classList.add("chat-bubble");
+        bubble.textContent = data.message; // XSS 방지
+
+        const time = document.createElement("div");
+        time.classList.add("chat-time");
+        time.textContent = formatTime(data.sentAt);
+
+        const currentMinute = getMinute(data.sentAt);
+
+
+
+        if (data.senderId === senderId) {
+
+            messageWrapper.classList.add("mine");
+            container.appendChild(bubble);
+            container.appendChild(time);
+
+
+        } else {
+            messageWrapper.classList.add("other");
+
+            const senderDiv = document.createElement("div");
+            senderDiv.classList.add("sender");
+            senderDiv.textContent = data.senderName;
+
+            container.appendChild(senderDiv);
+            container.appendChild(bubble);
+            container.appendChild(time);
+
+        }
+        messageWrapper.appendChild(container);
+        messageWrapper.dataset.sender = data.senderId;
+        messageWrapper.dataset.minute = getMinute(data.sentAt);
+
+        lastSenderId = data.senderId;
+        lastMessageMinute = currentMinute;
+
+        return messageWrapper;
+  }
+
+
+
+  function showNewMessageIndicator() {
+    const indicator = document.getElementById("new-message-indicator");
+    indicator.style.display = "block";
+  }
+
+  function hideNewMessageIndicator() {
+    const indicator = document.getElementById("new-message-indicator");
+    indicator.style.display = "none";
+  }
+
+  document.getElementById("new-message-indicator").addEventListener("click", function(){
+    const box = document.getElementById("chat-box");
+    box.scrollTop = box.scrollHeight; // 최신 메시지로 이동
+    hideNewMessageIndicator();
+  });
+
+
+
+
+  function sendMessage() {
+
+    const input = document.getElementById("message");
+    const message = input.value.trim();
+
+    if (message === "") return;
+
+    stompClient.send("/app/chat.send", {}, JSON.stringify({
+        studyId: studyId,
+        senderId: senderId,
+        senderName: senderName,
+        message: message
+    }));
+
+    input.value = "";
+
+  }
+
+
+  document.getElementById("message").addEventListener("keypress", function(e) {
+    if (e.key === "Enter" && !e.shiftKey) {
+        e.preventDefault();
+        sendMessage()
+    }
+  });
+
+  function formatTime(dateString){
+
+    const date = new Date(dateString);
+
+    let hours = date.getHours();
+    let minutes = date.getMinutes();
+
+    const ampm = hours >= 12 ? "오후" : "오전";
+
+    hours = hours % 12;
+    hours = hours ? hours : 12;
+
+    minutes = minutes < 10 ? "0" + minutes : minutes;
+
+    return ampm + " " + hours + ":" + minutes;
+  }
+
+  function getDateStr(dateString){
+    const date = new Date(dateString);
+    const year = date.getFullYear();
+    const month = (date.getMonth() + 1).toString().padStart(2, "0");
+    const day = date.getDate().toString().padStart(2, "0");
+    return `${year}-${month}-${day}`; // 예: 2026-03-13
+  }
+
+  function getMinute(dateString){
+    const date = new Date(dateString);
+    return date.getHours() + ":" + date.getMinutes();
+  }
+
+  window.addEventListener("DOMContentLoaded", () => {
+    loadInitialMessages();
+});
+
+<!--  loadOlderMessages();-->
+  connect();
+
+  const box = document.getElementById("chat-box");
+
+  box.addEventListener("scroll", function(){
+    if(box.scrollTop <= 10){
+        loadOlderMessages();
+    }
+  });
+</script>
+
+</body>
+</html>

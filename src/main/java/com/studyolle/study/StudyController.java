@@ -9,6 +9,7 @@ import com.studyolle.study.service.StudyService;
 import com.studyolle.study.validator.StudyFormValidator;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -18,10 +19,12 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.InitBinder;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 
+@Slf4j
 @Controller
 @RequiredArgsConstructor
 public class StudyController {
@@ -82,5 +85,20 @@ public class StudyController {
         Study study = studyRepository.findStudyWithMembersByPath(path);
         studyService.removeMember(study, account);
         return "redirect:/study/" + study.getEncodedPath() + "/members";
+    }
+
+    @GetMapping("/study/{path}/chat")
+    public String viewChat(@CurrentAccount Account account, @PathVariable String path,
+                           Model model,
+                           RedirectAttributes attributes){
+        Study study = studyService.getStudyForChat(path ,account);
+        if(!study.isParticipant(account)){
+            attributes.addFlashAttribute("errorMessage",
+                    "스터디 멤버만 채팅에 참여할 수 있습니다.");
+            return "redirect:/study/" + path;
+        }
+        model.addAttribute(account);
+        model.addAttribute(study);
+        return "chat/study-chat";
     }
 }

@@ -88,6 +88,19 @@ public class Study {
         return this.managers.contains(userAccount.getAccount());
     }
 
+    public boolean isMember(Account account) {
+        return this.members.contains(account);
+    }
+
+    public boolean isManager(Account account) {
+        return this.managers.contains(account);
+    }
+
+    public boolean isParticipant(Account account){
+        return isManager(account) || isMember(account);
+    }
+
+
     public String getImage() {
         return image != null ? image : "/images/default_banner.png";
     }
